@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Критичний погляд: руйнування стереотипів</title>
+    <link href="https://googleapis.com" rel="stylesheet">
+    <style>
+        :root {
+            --paper: #F7F3E8;
+            --white: #FFFFFF;
+            --ink: #111827;
+            --yellow: #FFD60A;
+            --red: #EF233C;
+            --blue: #2563EB;
+            --green: #10B981;
+            --muted: #4B5563;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--paper);
+            background-image: radial-gradient(#d6d0c0 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--ink);
+            line-height: 1.55;
+        }
+        h1, h2, h3 { font-family: 'Unbounded', sans-serif; line-height: 1.2; }
+        .container { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+        .pop-box {
+            background: var(--white);
+            border: 3px solid var(--ink);
+            box-shadow: 6px 6px 0 var(--ink);
+            border-radius: 16px;
+            padding: 26px;
+        }
+        .pop-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 13px 22px; font-weight: 800; font-size: 0.95rem;
+            border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink);
+            border-radius: 12px; cursor: pointer; text-decoration: none;
+            color: var(--ink); background: var(--yellow); transition: 0.15s;
+        }
+        .pop-btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+        .pop-btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+        .pop-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+        .btn-red { background: var(--red); color: #fff; }
+        .btn-blue { background: var(--blue); color: #fff; }
+        .btn-green { background: var(--green); color: #fff; }
+        .btn-white { background: var(--white); color: var(--ink); }
+
+        /* СТАРТОВЫЙ ЭКРАН ВВОДА ИМЕНИ */
+        .start-overlay {
+            position: fixed; inset: 0; background: var(--blue);
+            z-index: 9999; display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .start-card {
+            max-width: 520px; width: 100%; background: var(--paper);
+            border: 4px solid var(--ink); box-shadow: 10px 10px 0 var(--ink);
+            border-radius: 20px; padding: 34px; text-align: center;
+        }
+        .name-input {
+            width: 100%; padding: 14px 18px; font-size: 1.05rem; font-weight: 700;
+            border: 3px solid var(--ink); border-radius: 12px; margin: 18px 0 14px;
+            outline: none; background: #fff; font-family: 'Inter', sans-serif;
+        }
+        .name-input:focus { border-color: var(--blue); box-shadow: 4px 4px 0 var(--yellow); }
+
+        /* ЗАКРЕПЛЕННАЯ ШКАЛА ПРОГРЕССА */
+        .hud-bar {
+            position: sticky; top: 0; z-index: 100;
+            background: var(--ink); color: #fff;
+            border-bottom: 4px solid var(--yellow);
+            padding: 12px 0;
+        }
+        .hud-inner {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px; flex-wrap: wrap;
+        }
+        .progress-track {
+            flex: 1; min-width: 180px; height: 18px;
+            background: #374151; border: 2px solid #fff; border-radius: 99px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; width: 0%; background: var(--green);
+            transition: width 0.4s ease;
+        }
+
+        header {
+            padding: 50px 0 42px;
+            background: var(--blue); color: #fff;
+            border-bottom: 4px solid var(--ink);
+        }
+        header h1 {
+            font-size: clamp(1.85rem, 4.6vw, 3.1rem);
+            text-shadow: 4px 4px 0 var(--ink);
+            margin-bottom: 14px;
+        }
+        .hero-sub {
+            display: inline-block; background: var(--red); color: #fff;
+            padding: 8px 16px; border: 2px solid var(--ink); border-radius: 10px;
+            font-weight: 700; font-size: 1rem;
+        }
+
+        section { padding: 48px 0; }
+        .sec-header { margin-bottom: 24px; }
+        .sec-badge {
+            display: inline-block; background: var(--ink); color: var(--yellow);
+            font-size: 0.78rem; font-weight: 800; padding: 4px 10px;
+            border-radius: 6px; margin-bottom: 8px;
+        }
+        .sec-title { font-size: 1.6rem; }
+
+        /* ТЕОРЕТИЧЕСКИЕ КАРТОЧКИ */
+        .theory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .theory-num {
+            display: inline-block; background: var(--yellow); border: 2px solid var(--ink);
+            font-weight: 900; padding: 3px 10px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85rem;
+        }
+
+        /* ИНТЕРАКТИВ 1: РЕНТГЕН */
+        .fake-post {
+            background: #fff; border: 3px solid var(--ink); border-radius: 16px;
+            padding: 24px; box-shadow: 6px 6px 0 var(--red);
+        }
+        .post-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 0.85rem; color: var(--muted); font-weight: 700; flex-wrap: wrap; }
+        .clue {
+            background: #FEF08A; border-bottom: 2px dashed var(--red);
+            padding: 1px 4px; border-radius: 4px; cursor: pointer; font-weight: 600;
+        }
+        .clue.found { background: var(--red); color: #fff; border-bottom: none; }
+        .clue-dossier {
+            margin-top: 16px; padding: 16px; background: #FFF1F2;
+            border: 2px solid var(--red); border-radius: 12px; display: none;
+        }
+
+        /* ИНТЕРАКТИВ 2: НОЖНИЦЫ */
+        .myth-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 20px; }
+        .myth-side { background: #FEE2E2; border: 2px dashed var(--red); padding: 16px; border-radius: 12px; margin-bottom: 12px; }
+        .fact-side { background: #D1FAE5; border: 2px solid var(--green); padding: 16px; border-radius: 12px; display: none; }
+        .myth-card.cut .myth-side { opacity: 0.5; text-decoration: line-through; }
+        .myth-card.cut .fact-side { display: block; }
+
+        /* ИНТЕРАКТИВ 3: ТАЙМЕР 10 СЕК */
+        .fc-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; margin-top: 18px; }
+        .fc-step-card { background: var(--paper); border: 2px solid var(--ink); border-radius: 14px; padding: 20px; }
+        .step-num {
+            display: inline-flex; width: 32px; height: 32px; border-radius: 50%;
+            background: var(--red); color: #fff; font-weight: 800;
+            align-items: center; justify-content: center; border: 2px solid var(--ink); margin-bottom: 10px;
+        }
+        .fc-result-box {
+            margin-top: 12px; padding: 12px; background: #fff;
+            border: 2px solid var(--ink); border-radius: 10px; font-size: 0.9rem; display: none;
+        }
+
+        /* ИНТЕРАКТИВ 4: КОНСТРУКТОР КЛИКБЕЙТА */
+        .manip-preview {
+            background: var(--ink); color: #fff; padding: 22px;
+            border-radius: 14px; font-size: 1.1rem; font-weight: 700;
+            margin-bottom: 16px; border: 3px solid var(--yellow);
+        }
+        .manip-toggles { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        /* СЕРТИФИКАТ */
+        .cert-box {
+            display: none; background: var(--yellow);
+            border: 4px solid var(--ink); box-shadow: 8px 8px 0 var(--ink);
+            border-radius: 20px; padding: 34px; text-align: center;
+        }
+
+        footer {
+            background: var(--ink); color: #fff; text-align: center;
+            padding: 36px 20px; border-top: 4px solid var(--yellow); margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+<!-- СТАРТОВЫЙ ЭКРАН ВВОДА ИМЕНИ -->
+<div class="start-overlay" id="startOverlay">
+    <div class="start-card">
+        <span class="sec-badge">МАН • АНТИФЕЙК-ЛАБОРАТОРІЯ</span>
+        <h2 style="font-size: 1.55rem; margin: 10px 0;">Вхід у систему критичного мислення</h2>
+        <p style="color: var(--muted); font-size: 0.95rem;">Впиши своє ім'я, щоб отримати доступ до матеріалів, пройти 4 випробування на 100% імунітет та відкрити персональний сертифікат фактчекера.</p>
+        <input type="text" id="agentNameInput" class="name-input" placeholder="Наприклад: Олександр або Марія..." maxlength="30">
+        <button class="pop-btn btn-red" style="width: 100%; justify-content: center; font-size: 1.05rem;" onclick="startLab()">🚀 Почати розслідування</button>
+    </div>
+</div>
+
+<!-- ЗАКРЕПЛЕННАЯ ШКАЛА ПРОГРЕССА -->
+<div class="hud-bar">
+    <div class="container hud-inner">
+        <div style="font-weight: 800; font-size: 0.92rem;">
+            🕵️ Агент: <span id="hudName" style="color: var(--yellow);">Дослідник</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; flex: 1; max-width: 420px;">
+            <span style="font-size: 0.85rem; font-weight: 700; white-space: nowrap;">Імунітет до фейків:</span>
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span id="progressText" style="font-weight: 800; color: var(--green); min-width: 44px;">0%</span>
+        </div>
+    </div>
+</div>
+
+<header>
+    <div class="container">
+        <h1>КРИТИЧНИЙ ПОГЛЯД:<br>РУЙНУВАННЯ СТЕРЕОТИПІВ</h1>
+        <div class="hero-sub">Як розпізнати фейки, маніпуляції та нав'язані псевдоцінності</div>
+    </div>
+</header>
+
+<!-- ВВОДНАЯ ТЕОРИЯ ПЕРЕД ИНТЕРАКТИВАМИ -->
+<section class="container">
+    <div class="sec-header">
+        <span class="sec-badge">БАЗА ЗНАНЬ • ЧОМУ ЦЕ ПРАЦЮЄ</span>
+        <h2 class="sec-title">Секретне досьє: 3 головні механізми обману</h2>
+        <p style="color: var(--muted); margin-top: 6px;">Перш ніж перейти до практики, розберемося, як саме маніпулятори та алгоритми зламують нашу увагу.</p>
+    </div>
+
+    <div class="theory-grid">
+        <div class="pop-box">
+            <span class="theory-num">ФАКТ №1 • ПСИХОЛОГІЯ</span>
+            <h3 style="font-size: 1.15rem; margin-bottom: 10px;">Ефект підтвердження</h3>
+            <p style="color: var(--muted); font-size: 0.94rem;">Наш мозок економить енергію: йому легше повірити в гучну брехню, яка збігається з нашими страхами чи емоціями, ніж витрачати сили на перевірку. Саме тому фейки б'ють по гніву або паніці.</p>
+        </div>
+
+        <div class="pop-box">
+            <span class="theory-num" style="background: var(--red); color: #fff;">ФАКТ №2 • ДОСЛІДЖЕННЯ MIT</span>
+            <h3 style="font-size: 1.15rem; margin-bottom: 10px;">Правило швидкості 6x</h3>
+            <p style="color: var(--muted); font-size: 0.94rem;">Науковці Массачусетського технологічного інституту довели: фейкові новини в соцмережах поширюються <strong>у 6 разів швидше</strong> за правду. Алгоритми просувають те, що викликає шок, а не спокійні факти.</p>
+        </div>
+
+        <div class="pop-box">
+            <span class="theory-num" style="background: var(--blue); color: #fff;">ФАКТ №3 • СОЦІОЛОГІЯ</span>
+            <h3 style="font-size: 1.15rem; margin-bottom: 10px;">Анатомія стереотипу</h3>
+            <p style="color: var(--muted); font-size: 0.94rem;">Стереотип — це спрощений «ярлик», який реклама або оточення навішують на людей (наприклад, <em>«успіх = лише дорогі бренди»</em>). Без критичного погляду чужі шаблони починають керувати твоїм вибором.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ИНТЕРАКТИВ №1: РЕНТГЕН ФЕЙКА (+25%) -->
+<section id="xray" class="container">
+    <div class="sec-header">
+        <span class="sec-badge">ВИПРОБУВАННЯ №1 (+25% ДО ІМУНІТЕТУ)</span>
+        <h2 class="sec-title">Рентген-сканер фейку: знайди 4 пастки</h2>
+        <p style="color: var(--muted); margin-top: 6px;">Натисни на всі 4 жовті підказки всередині вірусного посту, щоб викрити маніпуляції з постера.</p>
+    </div>
+
+    <div class="fake-post">
+        <div class="post-meta">
+            <span>📢 Канал «СЕНСАЦІЇ 24/7»</span>
+            <span>•</span>
+            <span>Переслано 14 800 разів</span>
+            <span style="margin-left: auto; background: var(--yellow); color: var(--ink); padding: 2px 10px; border-radius: 6px; border: 2px solid var(--ink);" id="clue-counter">Знайдено: 0 / 4</span>
+        </div>
+        <p style="font-size: 1.06rem; line-height: 1.8;">
+            <span class="clue" onclick="revealClue(this, 'Пастка №1: Кричущий заголовок (ШОК! ТЕРМІНОВО!) — тисне на страх і вимикає логіку ще до прочитання тексту.')">🚨 ШОК! ТЕРМІНОВО!</span> 
+            <span class="clue" onclick="revealClue(this, 'Пастка №2: Анонімні експерти — жодного прізвища, університету чи посилання на реальне дослідження.')">Таємна група британських вчених довела</span>, 
+            що 5G-вишки та смартфони повністю стирають пам'ять за 3 місяці! 
+            <span class="clue" onclick="revealClue(this, 'Пастка №3: Узагальнення (Усі так роблять!) — створює ілюзію масової паніки без жодної статистики.')">Усі розумні люди вже викинули свої гаджети</span>, 
+            а влада приховує це від народу! 
+            <span class="clue" onclick="revealClue(this, 'Пастка №4: Заклик поширити негайно — маніпулятор не дає тобі 10 секунд на перевірку фактів.')">ТЕРМІНОВО ПЕРЕШЛИ ЦЕ 10 ДРУЗЯМ, ПОКИ НЕ ВИДАЛИЛИ!</span>
+        </p>
+        <div class="clue-dossier" id="clue-dossier">
+            <strong style="color: var(--red);">🕵️ Досьє фактчекера:</strong>
+            <p id="clue-text" style="margin-top: 6px; font-weight: 600;"></p>
+        </div>
+    </div>
+</section>
+
+<!-- ИНТЕРАКТИВ №2: НОЖНИЦЫ СТЕРЕОТИПОВ (+25%) -->
+<section class="container">
+    <div class="sec-header">
+        <span class="sec-badge">ВИПРОБУВАННЯ №2 (+25% ДО ІМУНІТЕТУ)</span>
+        <h2 class="sec-title">Ножиці стереотипів: розріж нав'язані міфи</h2>
+        <p style="color: var(--muted); margin-top: 6px;">Розріж ножицями всі 3 стереотипи, щоб побачити реальні факти.</p>
+    </div>
+
+    <div class="myth-grid">
+        <div class="pop-box myth-card" id="myth-1">
+            <div class="myth-side">
+                <strong style="color: var(--red);">❌ МІФ ІЗ ПОСТЕРА:</strong>
+                <p style="margin-top: 6px; font-weight: 600;">«Успіх — це лише дорогі бренди, айфон останньої моделі та ідеальна картинка в мережі».</p>
+            </div>
+            <div class="fact-side">
+                <strong style="color: #065F46;">✅ РЕАЛЬНИЙ ФАКТ:</strong>
+                <p style="margin-top: 6px;">Це нав'язана рекламою псевдоцінність. Справжня сила — у критичному мисленні, власних знаннях, навичках та репутації.</p>
+            </div>
+            <button class="pop-btn btn-red" style="margin-top: 10px; width: 100%; justify-content: center;" onclick="cutMyth('myth-1', this)">✂️ Розрізати стереотип</button>
+        </div>
+
+        <div class="pop-box myth-card" id="myth-2">
+            <div class="myth-side">
+                <strong style="color: var(--red);">❌ СТЕРЕОТИП ПРО МОЛОДЬ:</strong>
+                <p style="margin-top: 6px; font-weight: 600;">«Сучасні підлітки лише сидять у TikTok і нічим корисним не цікавляться».</p>
+            </div>
+            <div class="fact-side">
+                <strong style="color: #065F46;">✅ РЕАЛЬНИЙ ФАКТ:</strong>
+                <p style="margin-top: 6px;">Понад 70% підлітків використовують цифрові інструменти для вивчення мов, програмування, волонтерства та наукових проєктів МАН.</p>
+            </div>
+            <button class="pop-btn btn-red" style="margin-top: 10px; width: 100%; justify-content: center;" onclick="cutMyth('myth-2', this)">✂️ Розрізати стереотип</button>
+        </div>
+
+        <div class="pop-box myth-card" id="myth-3">
+            <div class="myth-side">
+                <strong style="color: var(--red);">❌ ІЛЮЗІЯ ЛАЙКІВ ТА ШІ:</strong>
+                <p style="margin-top: 6px; font-weight: 600;">«Якщо у посту тисячі лайків і є яскраве фото — це стовідсоткова правда».</p>
+            </div>
+            <div class="fact-side">
+                <strong style="color: #065F46;">✅ РЕАЛЬНИЙ ФАКТ:</strong>
+                <p style="margin-top: 6px;">Нейромережі генерують діпфейки за секунди, а боти накручують реакції. Кількість лайків ніколи не дорівнює правді.</p>
+            </div>
+            <button class="pop-btn btn-red" style="margin-top: 10px; width: 100%; justify-content: center;" onclick="cutMyth('myth-3', this)">✂️ Розрізати стереотип</button>
+        </div>
+    </div>
+</section>
+
+<!-- ИНТЕРАКТИВ №3: РЕАЛЬНОЕ МИНИ-РАССЛЕДОВАНИЕ (+25%) -->
+<section id="factcheck" class="container" style="margin-top: 50px; padding-top: 20px;">
+    <div class="pop-box" style="background: var(--yellow);">
+        <div class="sec-header" style="margin-bottom: 22px;">
+            <span class="sec-badge">ВИПРОБУВАННЯ №3 (+25% ДО ІМУНІТЕТУ)</span>
+            <h2 class="sec-title">Кейс-розслідування: перевір новину за 3 кроки</h2>
+            <p style="margin-top: 6px; font-weight: 600;">У стрічці з'явився цей тривожний пост. Пройди 3 кроки з постера, щоб довести, що це фейк:</p>
+        </div>
+
+        <!-- ОБЪЕКТ ПРОВЕРКИ (ФОТО ИЗ STATIC + ТЕКСТ ПОСТА) -->
+        <div style="background: #FFFFFF; border: 3px solid var(--ink); border-radius: 14px; padding: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; align-items: center; margin-bottom: 26px;">
+            <div style="position: relative; border: 3px solid var(--ink); border-radius: 12px; overflow: hidden; background: #1e293b;">
+                <span style="position: absolute; top: 10px; left: 10px; background: var(--red); color: #fff; font-size: 0.72rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; border: 2px solid var(--ink); z-index: 2;">ФОТО З ПОСТУ</span>
+                <img src="{{ url_for('static', filename='fake_photo.jpg') }}" alt="Заметена снігом траса" style="width: 100%; height: 215px; object-fit: cover; display: block;">
+                <div style="background: var(--ink); color: #fff; font-size: 0.78rem; padding: 7px 12px; font-weight: 600;">
+                    Підпис у пості: «Знято 15 хвилин тому на виїзді з міста!»
+                </div>
+            </div>
+            <div>
+                <span style="display: inline-block; background: #FEE2E2; color: var(--red); font-weight: 800; font-size: 0.78rem; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--red);">ВІРУСНИЙ ВКИД У МЕРЕЖІ</span>
+                <h3 style="font-size: 1.12rem; margin: 12px 0;">«ТЕРМІНОВО! Через збій кліматичної вежі сьогодні вранці трасу засипало 3-метровим снігом, сотні авто заблоковані! Поширюйте!»</h3>
+                <p style="font-size: 0.9rem; color: var(--muted);">Джерело: анонімний Telegram-канал без жодного посилання на рятувальників чи поліцію.</p>
+            </div>
+        </div>
+
+        <!-- 3 КОНТРАСТНЫЕ БЕЛЫЕ КАРТОЧКИ ШАГОВ -->
+        <div class="fc-steps">
+            <div class="fc-step-card" style="background: #FFFFFF; border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink);">
+                <div class="step-num" style="background: var(--blue);">1</div>
+                <h3>Пауза 10 секунд</h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin: 8px 0 14px;">Не тисни «Репост» на емоціях. Витримай 10 секунд і оціни подачу тексту.</p>
+                <button class="pop-btn btn-blue" id="timer-btn" onclick="startPauseTimer()">⏱ Запустити паузу (10с)</button>
+                <div class="fc-result-box" id="step1-res" style="background: #EFF6FF; border-color: var(--blue);">
+                    ✅ <strong>Виявлено 3 емоційні гачки:</strong> слово «ТЕРМІНОВО», вигадана «кліматична вежа» та наказ «Поширюйте!».
+                </div>
+            </div>
+
+            <div class="fc-step-card" style="background: #FFFFFF; border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink);">
+                <div class="step-num" style="background: var(--red);">2</div>
+                <h3>Перевір 2–3 медіа</h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin: 8px 0 14px;">Звір, чи пишуть про цю надзвичайну подію офіційні служби та надійні ЗМІ.</p>
+                <button class="pop-btn btn-red" id="media-btn" onclick="checkMediaStep()">📰 Звірити 3 джерела</button>
+                <div class="fc-result-box" id="step2-res" style="background: #FFF1F2; border-color: var(--red);">
+                    • <strong>Метеоцентр:</strong> у регіоні сьогодні +12°C і сухо.<br>
+                    • <strong>Офіційні новини:</strong> траса відкрита, заторів немає.<br>
+                    • <strong>Висновок:</strong> жодне надійне медіа новину не підтвердило.
+                </div>
+            </div>
+
+            <div class="fc-step-card" style="background: #FFFFFF; border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink);">
+                <div class="step-num" style="background: var(--green);">3</div>
+                <h3>Знайди оригінал фото</h3>
+                <p style="font-size: 0.9rem; color: var(--muted); margin: 8px 0 14px;">Перевір через зворотний пошук зображень, коли насправді зроблено цей кадр.</p>
+                <button class="pop-btn btn-green" id="photo-btn" onclick="checkPhotoStep()">🔎 Знайти оригінал</button>
+                <div class="fc-result-box" id="step3-res" style="background: #ECFDF5; border-color: var(--green);">
+                    🚨 <strong>Фейк доведено!</strong> Зворотний пошук показав, що це фото опубліковане ще в <strong>лютому 2018 року</strong> в Канаді. Для перевірки фото використовуй <a href="https://google.com" target="_blank" style="color: var(--blue); font-weight: 700;">Google Об'єктив</a> або <a href="https://tineye.com" target="_blank" style="color: var(--blue); font-weight: 700;">TinEye</a>.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ИНТЕРАКТИВ №4: КОНСТРУКТОР КЛИКБЕЙТА (+25% ЗА ВСЕ 3 КНОПКИ) -->
+<section class="container" style="margin-top: 30px;">
+    <div class="sec-header">
+        <span class="sec-badge">ВИПРОБУВАННЯ №4 (+25% ДО ІМУНІТЕТУ)</span>
+        <h2 class="sec-title">Конструктор клікбейту: подивись очима маніпулятора</h2>
+        <p style="color: var(--muted); margin-top: 6px;">Увімкни <strong>усі 3 прийоми</strong> маніпуляторів, щоб побачити, як із нудного факту роблять вірусний фейк:</p>
+    </div>
+
+    <div class="pop-box">
+        <div class="manip-preview" id="manip-text">
+            📰 Оригінал: «Дослідники опитали 500 підлітків і з'ясували, що відсутність сну знижує концентрацію на уроках».
+        </div>
+        <div class="manip-toggles">
+            <button class="pop-btn btn-red" onclick="toggleManip('shock')">🔥 Додати кричущий заголовок</button>
+            <button class="pop-btn" onclick="toggleManip('anon')">🕵️ Замінити на «таємних експертів»</button>
+            <button class="pop-btn btn-blue" onclick="toggleManip('panic')">📢 Додати заклик до паніки</button>
+            <button class="pop-btn btn-white" onclick="resetManip()">↺ Скинути до правди</button>
+        </div>
+    </div>
+</section>
+
+<!-- ВИДЕО-ГАЙД DW -->
+<section class="container" style="margin-top: 30px; margin-bottom: 50px;">
+    <div class="sec-header">
+        <span class="sec-badge">ВІДЕО-ГАЙД ДЛЯ ПІДЛІТКІВ</span>
+        <h2 class="sec-title">Як розпізнати фейки: лайфхаки DW</h2>
+        <p style="color: var(--muted); margin-top: 6px;">Коротка інструкція, як за 2 хвилини перевірити будь-яку гучну новину.</p>
+    </div>
+
+    <div class="pop-box" style="padding: 16px; background: var(--ink);">
+        <video controls preload="metadata" style="width: 100%; border-radius: 10px; display: block; aspect-ratio: 16/9; background: #000;">
+            <source src="{{ url_for('static', filename='video.mp4') }}" type="video/mp4">
+            Ваш браузер не підтримує відтворення відео.
+        </video>
+    </div>
+</section>
+
+<!-- ФИНАЛЬНЫЙ СЕРТИФИКАТ НА 100% (ОТДЕЛЕН БОЛЬШИМ ОТСТУПОМ) -->
+<section class="container" id="certSection" style="display: none; margin-top: 60px; margin-bottom: 70px;">
+    <div class="cert-box" id="certBox" style="display: block;">
+        <span class="sec-badge" style="background: var(--red); color: #fff; font-size: 0.9rem; padding: 6px 14px;">🏆 МІСІЮ ВИКОНАНО НА 100%</span>
+        <h2 style="font-size: 1.9rem; margin: 18px 0 14px;">СЕРТИФІКАТ ФАКТЧЕКЕРА</h2>
+        <p style="font-size: 1.15rem; font-weight: 700; margin-bottom: 14px; line-height: 1.6;">
+            Підтверджено, що <span id="certName" style="background: var(--ink); color: var(--yellow); padding: 4px 14px; border-radius: 8px;">Агент</span> має 100% критичний імунітет до фейків, клікбейту та нав'язаних стереотипів!
+        </p>
+        <p style="color: var(--muted); font-size: 0.98rem; max-width: 620px; margin: 0 auto;">Тепер алгоритми не керують твоєю думкою — ти перевіряєш факти та керуєш інформацією сам.</p>
+    </div>
+</section>
+
+<footer style="margin-top: 60px;">
+    <div class="container">
+        <p style="color: #9CA3AF; font-size: 0.92rem;">Інтерактивний веб-постер створено для обласного конкурсу МАН України • Номінація «Критичний погляд: руйнування стереотипів»</p>
+        <p style="margin-top: 10px; color: var(--yellow); font-weight: 800; font-size: 1.05rem;">Автор проєкту: Горбенко Ілля</p>
+    </div>
+</footer>
+<script>
+    let agentName = "Дослідник";
+    let tasksDone = { xray: false, myths: false, fc: false, manip: false };
+
+    function startLab() {
+        const val = document.getElementById('agentNameInput').value.trim();
+        agentName = val ? val : "Агент 007";
+        document.getElementById('hudName').innerText = agentName;
+        document.getElementById('certName').innerText = agentName;
+        document.getElementById('startOverlay').style.display = 'none';
+    }
+
+    function updateProgress() {
+        let score = 0;
+        if (tasksDone.xray) score += 25;
+        if (tasksDone.myths) score += 25;
+        if (tasksDone.fc) score += 25;
+        if (tasksDone.manip) score += 25;
+
+        document.getElementById('progressFill').style.width = score + '%';
+        document.getElementById('progressText').innerText = score + '%';
+
+        if (score === 100) {
+            const certSec = document.getElementById('certSection');
+            certSec.style.display = 'block';
+            certSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    let foundCount = 0;
+    function revealClue(el, explanation) {
+        if (!el.classList.contains('found')) {
+            el.classList.add('found');
+            foundCount++;
+            document.getElementById('clue-counter').innerText = `Знайдено: ${foundCount} / 4`;
+            if (foundCount === 4) {
+                tasksDone.xray = true;
+                updateProgress();
+            }
+        }
+        const dossier = document.getElementById('clue-dossier');
+        dossier.style.display = 'block';
+        document.getElementById('clue-text').innerText = explanation;
+    }
+
+    let cutSet = new Set();
+    function cutMyth(id, btn) {
+        const card = document.getElementById(id);
+        card.classList.toggle('cut');
+        if (card.classList.contains('cut')) {
+            btn.innerText = '↺ Повернути міф';
+            btn.classList.remove('btn-red');
+            btn.classList.add('btn-white');
+            cutSet.add(id);
+            if (cutSet.size === 3) {
+                tasksDone.myths = true;
+                updateProgress();
+            }
+        } else {
+            btn.innerText = '✂️ Розрізати стереотип';
+            btn.classList.remove('btn-white');
+            btn.classList.add('btn-red');
+        }
+    }
+
+    let fcSteps = { s1: false, s2: false, s3: false };
+    let timerRunning = false;
+
+    function checkFcComplete() {
+        if (fcSteps.s1 && fcSteps.s2 && fcSteps.s3) {
+            tasksDone.fc = true;
+            updateProgress();
+        }
+    }
+
+    function startPauseTimer() {
+        if (timerRunning || fcSteps.s1) return;
+        timerRunning = true;
+        let sec = 10;
+        const btn = document.getElementById('timer-btn');
+        btn.disabled = true;
+        const interval = setInterval(() => {
+            btn.innerText = `⏳ Охолонь... ${sec} сек`;
+            sec--;
+            if (sec < 0) {
+                clearInterval(interval);
+                btn.innerText = '✅ Паузу витримано!';
+                btn.classList.remove('btn-blue');
+                btn.classList.add('btn-green');
+                document.getElementById('step1-res').style.display = 'block';
+                fcSteps.s1 = true;
+                timerRunning = false;
+                checkFcComplete();
+            }
+        }, 1000);
+    }
+
+    function checkMediaStep() {
+        document.getElementById('step2-res').style.display = 'block';
+        fcSteps.s2 = true;
+        checkFcComplete();
+    }
+
+    function checkPhotoStep() {
+        document.getElementById('step3-res').style.display = 'block';
+        fcSteps.s3 = true;
+        checkFcComplete();
+    }
+
+    let manipState = { shock: false, anon: false, panic: false };
+    function toggleManip(type) {
+        manipState[type] = !manipState[type];
+        if (manipState.shock && manipState.anon && manipState.panic) {
+            tasksDone.manip = true;
+            updateProgress();
+        }
+        renderManip();
+    }
+    function resetManip() {
+        manipState = { shock: false, anon: false, panic: false };
+        renderManip();
+    }
+    function renderManip() {
+        let prefix = manipState.shock ? '🚨 ШОК! ТЕРМІНОВО! НІХТО НЕ ОЧІКУВАВ! ' : '📰 Факт: ';
+        let source = manipState.anon ? 'Засекречені вчені підтвердили, що ' : 'Дослідники опитали 500 підлітків і з\'ясували, що ';
+        let core = manipState.shock ? 'СМАРТФОНИ ТА НЕДОСИП НАЗАВЖДИ ЗНИЩУЮТЬ МОЗОК ШКОЛЯРІВ!' : 'відсутність сну знижує концентрацію на уроках.';
+        let ending = manipState.panic ? ' УСІ БАТЬКИ В ПАНІЦІ! ТЕРМІНОВО ПЕРЕШЛИ В УСІ ЧАТИ!' : '';
+        document.getElementById('manip-text').innerText = prefix + source + core + ending;
+    }
+</script>
+</body>
+</html>
